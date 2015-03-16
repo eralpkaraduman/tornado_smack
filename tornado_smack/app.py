@@ -406,7 +406,7 @@ class App(object):
                 debug_container = tornado.wsgi.WSGIContainer(debug_app)
 
                 http_server = tornado.httpserver.HTTPServer(debug_container)
-                http_server.listen(8888)
+                http_server.listen(port)
                 tornado.ioloop.IOLoop.instance().start()
             else:
                 import tornado.ioloop
