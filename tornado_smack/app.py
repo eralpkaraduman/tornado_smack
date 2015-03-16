@@ -394,11 +394,19 @@ class App(object):
         template_path = settings.get('template_path')
         if not template_path:
             settings['template_path'] = self.template_path
+
+        static_handlers = []
+        static_path = settings.get('static_path')
+        if static_path:
+            from tornado.web import StaticFileHandler
+            static_handlers.append((r'/static/(.*)', StaticFileHandler, {'path': static_path}))
+
         if self.debug:
             if with_wsgi_adapter:
                 import tornado.httpserver
                 from werkzeug.debug import DebuggedApplication
-                application = DebugApplication(self.get_routes() + self.routes_list, **settings)
+
+                application = DebugApplication(self.get_routes() + self.routes_list + static_handlers, **settings)
                 wsgi_application = tornado.wsgi.WSGIAdapter(application)
 
                 debug_app = DebuggedApplication(app=wsgi_application, evalex=True)
@@ -410,12 +418,12 @@ class App(object):
                 tornado.ioloop.IOLoop.instance().start()
             else:
                 import tornado.ioloop
-                application = DebugApplication(self.get_routes() + self.routes_list, **settings)
+                application = DebugApplication(self.get_routes() + self.routes_list + static_handlers, **settings)
                 application.listen(port, address)
                 tornado.ioloop.IOLoop.instance().start()
         else:
             import tornado.web
-            application = tornado.web.Application(self.get_routes() + self.routes_list, **settings)
+            application = tornado.web.Application(self.get_routes() + self.routes_list + static_handlers, **settings)
             logger.info("starting server on port: %s", port)
             application.listen(port, address)
             tornado.ioloop.IOLoop.instance().start()
